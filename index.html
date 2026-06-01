@@ -74,8 +74,6 @@
     .btn-ghost:hover { background: var(--bg); color: var(--text); }
     .btn-primary { background: var(--primary); color: #fff; padding: 8px 16px; font-size: 13px; font-weight: 600; }
     .btn-primary:hover { background: #4338ca; }
-    .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 8px 16px; font-size: 13px; }
-    .btn-secondary:hover { background: var(--border); }
 
     /* ── Toolbar ──────────────────────────────────────────────── */
     .toolbar {
@@ -210,36 +208,6 @@
     .type-badge  { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
     .detail-box  { background: var(--bg); border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.6; color: var(--text); }
 
-    /* ── Settings Panel ───────────────────────────────────────── */
-    .settings-overlay { position: fixed; inset: 0; background: rgba(15,20,30,.5); backdrop-filter: blur(3px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity .2s; }
-    .settings-overlay.open { opacity: 1; pointer-events: all; }
-    .settings-panel { background: var(--surface); border-radius: 16px; width: 100%; max-width: 520px; box-shadow: 0 24px 64px rgba(0,0,0,.22); transform: translateY(14px); transition: transform .2s; overflow: hidden; }
-    .settings-overlay.open .settings-panel { transform: translateY(0); }
-    .settings-header { padding: 20px 20px 0; display: flex; justify-content: space-between; align-items: center; }
-    .settings-header h2 { font-size: 18px; font-weight: 700; }
-    .settings-body { padding: 16px 20px 24px; display: flex; flex-direction: column; gap: 16px; }
-
-    .setup-steps { background: var(--bg); border-radius: 10px; padding: 14px 16px; }
-    .setup-steps h3 { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
-    .setup-steps ol { padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
-    .setup-steps li { font-size: 13px; line-height: 1.5; color: var(--text); }
-    .setup-steps code { background: var(--border); padding: 1px 5px; border-radius: 4px; font-size: 12px; font-family: monospace; }
-
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group label { font-size: 13px; font-weight: 600; }
-    .form-group input {
-      border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 12px;
-      font-size: 13px; font-family: inherit; outline: none; transition: border-color .15s;
-      background: var(--surface); color: var(--text);
-    }
-    .form-group input:focus { border-color: var(--primary); }
-    .form-group .hint { font-size: 12px; color: var(--muted); }
-
-    .settings-actions { display: flex; gap: 8px; justify-content: flex-end; }
-    .status-msg { font-size: 13px; padding: 8px 12px; border-radius: 8px; text-align: center; }
-    .status-msg.success { background: #ecfdf5; color: #059669; }
-    .status-msg.error   { background: #fef2f2; color: #dc2626; }
-    .status-msg.hidden  { display: none; }
 
     /* ── Mobile ───────────────────────────────────────────────── */
     @media (max-width: 640px) {
@@ -278,7 +246,6 @@
       <span class="sync-dot pulse" id="syncDot"></span>
       <span id="syncText">Loading…</span>
     </div>
-    <button class="btn btn-ghost" onclick="openSettings()" title="Settings">⚙</button>
   </div>
 </header>
 
@@ -293,8 +260,8 @@
     <button class="btn btn-ghost" onclick="goToday()">Today</button>
   </div>
   <div class="view-toggle">
-    <button class="view-btn active" id="calBtn"  onclick="setView('cal')">Month</button>
-    <button class="view-btn"        id="listBtn" onclick="setView('list')">List</button>
+    <button class="view-btn"        id="calBtn"  onclick="setView('cal')">Month</button>
+    <button class="view-btn active" id="listBtn" onclick="setView('list')">List</button>
   </div>
 </div>
 
@@ -371,44 +338,6 @@
   </div>
 </div>
 
-<!-- ══ Settings Panel ═══════════════════════════════════════════ -->
-<div class="settings-overlay" id="settingsOverlay" onclick="closeSettingsOutside(event)">
-  <div class="settings-panel">
-    <div class="settings-header">
-      <h2>⚙ Settings</h2>
-      <button class="close-btn" onclick="closeSettings()">✕</button>
-    </div>
-    <div class="settings-body">
-
-      <div class="setup-steps">
-        <h3>Google Sheet Setup</h3>
-        <ol>
-          <li>Create a Google Sheet with four columns:<br>
-            <code>Name</code> &nbsp;|&nbsp; <code>Type</code> &nbsp;|&nbsp; <code>Date</code> &nbsp;|&nbsp; <code>Detail</code>
-          </li>
-          <li><strong>Type</strong> must be one of: <code>Service</code>, <code>Event</code>, <code>Leader</code>, <code>Venture</code></li>
-          <li><strong>Date</strong> format: <code>YYYY-MM-DD</code> (e.g. 2026-06-07) — use a plain text cell</li>
-          <li>Share the sheet → <em>Anyone with the link can view</em></li>
-          <li>Paste the URL or Sheet ID below and click <strong>Connect</strong></li>
-        </ol>
-      </div>
-
-      <div class="form-group">
-        <label for="sheetInput">Google Sheet URL or ID</label>
-        <input type="text" id="sheetInput"
-          placeholder="https://docs.google.com/spreadsheets/d/…" />
-        <span class="hint">The long string of letters and numbers in the URL</span>
-      </div>
-
-      <div id="settingsStatus" class="status-msg hidden"></div>
-
-      <div class="settings-actions">
-        <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
-        <button class="btn btn-primary"   onclick="connectSheet()">Connect Sheet</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
 'use strict';
@@ -447,7 +376,7 @@ let EVENTS          = [];
 let currentYear     = new Date().getFullYear();
 let currentMonth    = new Date().getMonth();
 let currentWeekStart = getMondayOf(new Date());
-let currentView     = 'cal';
+let currentView     = 'list';
 let activeFilters   = new Set(['Service','Event','Leader','Venture','Groups']);
 let refreshTimer    = null;
 
@@ -875,61 +804,6 @@ function closeEventModal(e) {
   }
 }
 
-// ── Settings panel ────────────────────────────────────────────
-function openSettings() {
-  const saved = localStorage.getItem(STORAGE_KEY) || DEFAULT_SHEET_ID;
-  document.getElementById('sheetInput').value = saved;
-  document.getElementById('settingsStatus').className = 'status-msg hidden';
-  document.getElementById('settingsStatus').textContent = '';
-  document.getElementById('settingsOverlay').classList.add('open');
-}
-
-function closeSettings() {
-  document.getElementById('settingsOverlay').classList.remove('open');
-}
-
-function closeSettingsOutside(e) {
-  if (e.target === document.getElementById('settingsOverlay')) closeSettings();
-}
-
-async function connectSheet() {
-  const raw = document.getElementById('sheetInput').value.trim();
-  const status = document.getElementById('settingsStatus');
-
-  if (!raw) {
-    status.className = 'status-msg error';
-    status.textContent = 'Please paste your Google Sheet URL or ID.';
-    return;
-  }
-
-  const sheetId = extractSheetId(raw);
-  status.className = 'status-msg loading';
-  status.textContent = 'Connecting…';
-
-  try {
-    const events = await fetchSheet(sheetId);
-    localStorage.setItem(STORAGE_KEY, sheetId);
-    status.className = 'status-msg success';
-    status.textContent = `✓ Connected! Found ${events.length} event${events.length !== 1 ? 's' : ''}.`;
-    EVENTS = events;
-    setSyncState('live', `${EVENTS.length} events · ${fmtTime(new Date())}`);
-    // Jump to earliest event month
-    if (EVENTS.length > 0) {
-      const dates = EVENTS.map(e => e.date).sort();
-      const earliest = new Date(dates[0] + 'T00:00:00');
-      const today = new Date();
-      if (earliest > today) {
-        currentYear  = earliest.getFullYear();
-        currentMonth = earliest.getMonth();
-        currentWeekStart = getMondayOf(earliest);
-      }
-    }
-    setTimeout(() => { closeSettings(); showState('cal'); scheduleRefresh(sheetId); }, 900);
-  } catch (err) {
-    status.className = 'status-msg error';
-    status.textContent = `Error: ${err.message}`;
-  }
-}
 
 // ── Init ──────────────────────────────────────────────────────
 (function init() {

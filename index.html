@@ -260,8 +260,8 @@
     <button class="btn btn-ghost" onclick="goToday()">Today</button>
   </div>
   <div class="view-toggle">
-    <button class="view-btn"        id="calBtn"  onclick="setView('cal')">Month</button>
     <button class="view-btn active" id="listBtn" onclick="setView('list')">List</button>
+    <button class="view-btn"        id="calBtn"  onclick="setView('cal')">Month</button>
   </div>
 </div>
 
@@ -674,6 +674,8 @@ function renderWeek() {
 
 // ── List render ───────────────────────────────────────────────
 function renderList() {
+  document.getElementById('periodLabel').textContent =
+    `${MONTH_NAMES[currentMonth]} ${currentYear}`;
   const evs = eventsForMonth(currentYear, currentMonth);
   const listEl = document.getElementById('listView');
   listEl.innerHTML = '';

@@ -192,6 +192,7 @@
     .event-name   { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
     .event-meta   { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
     .event-detail-preview { font-size: 13px; color: var(--muted); line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .days-out-badge { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 2px 9px; white-space: nowrap; }
 
     /* ── Event Detail Modal ───────────────────────────────────── */
     .overlay { position: fixed; inset: 0; background: rgba(15,20,30,.45); backdrop-filter: blur(2px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity .2s; }
@@ -361,6 +362,10 @@
         <span class="meta-icon">📅</span>
         <span class="meta-text" id="modalDate"></span>
       </div>
+      <div class="meta-row" id="modalDaysOutRow">
+        <span class="meta-icon">⏱</span>
+        <span class="meta-text" id="modalDaysOut"></span>
+      </div>
       <div class="detail-box" id="modalDetail"></div>
     </div>
   </div>
@@ -476,10 +481,11 @@ function parseDate(val) {
 function parseGvizTable(table) {
   const headers = table.cols.map(c => (c.label || '').trim().toLowerCase());
   const idx = {
-    name:   headers.findIndex(h => ['name','event','event name','title'].includes(h)),
-    type:   headers.findIndex(h => h === 'type' || h === 'category'),
-    date:   headers.findIndex(h => h === 'date'),
-    detail: headers.findIndex(h => ['detail','details','description','notes'].includes(h)),
+    name:    headers.findIndex(h => ['name','event','event name','title'].includes(h)),
+    type:    headers.findIndex(h => h === 'type' || h === 'category'),
+    date:    headers.findIndex(h => h === 'date'),
+    detail:  headers.findIndex(h => ['detail','details','description','notes'].includes(h)),
+    daysOut: headers.findIndex(h => h === 'days out' || h === 'daysout' || h === 'days'),
   };
 
   return (table.rows || [])
@@ -488,11 +494,14 @@ function parseGvizTable(table) {
       const g = i => (i >= 0 && row.c[i]) ? (row.c[i].v ?? '') : '';
       const rawType = String(g(idx.type)).trim();
       const type    = TYPE_NORMALIZE[rawType.toLowerCase()] ?? rawType;
+      const rawDays = g(idx.daysOut);
+      const daysOut = (rawDays !== '' && rawDays !== null) ? Math.round(parseFloat(rawDays)) : null;
       return {
         name:   String(g(idx.name)).trim(),
         type,
         date:   parseDate(g(idx.date)),
         detail: String(g(idx.detail)).trim(),
+        daysOut,
       };
     })
     .filter(e => e.name && e.date && VALID_TYPES.has(e.type));
@@ -572,6 +581,15 @@ function fmtLong(ds) {
 
 function fmtTime(d) {
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+function fmtDaysOut(n) {
+  if (n === null || isNaN(n)) return null;
+  if (n === 0)  return 'Today';
+  if (n === 1)  return 'Tomorrow';
+  if (n === -1) return 'Yesterday';
+  if (n > 0)    return `${n} days away`;
+  return `${Math.abs(n)} days ago`;
 }
 
 function weekRangeLabel(mon) {
@@ -751,6 +769,7 @@ function renderList() {
     const card = document.createElement('div');
     card.className = 'event-card';
     card.onclick = () => openEventModal(ev);
+    const daysLabel = fmtDaysOut(ev.daysOut);
     card.innerHTML = `
       <div class="event-date-block">
         <div class="date-month">${MONTH_NAMES[m-1].slice(0,3).toUpperCase()}</div>
@@ -763,8 +782,9 @@ function renderList() {
           <span class="type-badge" style="background:var(--${tc.cls}-bg);color:var(--${tc.cls})">
             ${tc.icon} ${tc.label}
           </span>
+          ${daysLabel ? `<span class="days-out-badge">${daysLabel}</span>` : ''}
         </div>
-        <div class="event-detail-preview">${ev.detail}</div>
+        <div class="event-detail-preview">${ev.detail || '<em style="color:var(--muted)">No details</em>'}</div>
       </div>`;
     listEl.appendChild(card);
   });
@@ -830,10 +850,22 @@ function openEventModal(ev) {
   document.getElementById('modalTitle').textContent  = ev.name;
   document.getElementById('modalDate').innerHTML     = `<strong>${fmtLong(ev.date)}</strong>`;
   document.getElementById('modalDetail').textContent = ev.detail;
+
   const badge = document.getElementById('modalType');
   badge.textContent      = `${tc.icon} ${tc.label}`;
   badge.style.background = `var(--${tc.cls}-bg)`;
   badge.style.color      = `var(--${tc.cls})`;
+
+  const daysLabel = fmtDaysOut(ev.daysOut);
+  const daysRow   = document.getElementById('modalDaysOutRow');
+  const daysText  = document.getElementById('modalDaysOut');
+  if (daysLabel) {
+    daysText.innerHTML = `<strong>${daysLabel}</strong>`;
+    daysRow.style.display = '';
+  } else {
+    daysRow.style.display = 'none';
+  }
+
   document.getElementById('eventOverlay').classList.add('open');
 }
 

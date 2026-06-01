@@ -26,6 +26,7 @@
       --event:   #f59e0b; --event-bg:   #fef3c7;
       --leader:  #8b5cf6; --leader-bg:  #ede9fe;
       --venture: #10b981; --venture-bg: #d1fae5;
+      --groups:  #ec4899; --groups-bg:  #fce7f3;
 
       --radius: 10px;
       --shadow: 0 1px 4px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
@@ -108,6 +109,7 @@
     .pill-event   { background: var(--event-bg);   color: var(--event);   border-color: var(--event); }
     .pill-leader  { background: var(--leader-bg);  color: var(--leader);  border-color: var(--leader); }
     .pill-venture { background: var(--venture-bg); color: var(--venture); border-color: var(--venture); }
+    .pill-groups  { background: var(--groups-bg);  color: var(--groups);  border-color: var(--groups); }
     .pill.inactive { background: var(--bg); color: var(--muted); border-color: var(--border); }
     .pill:hover { opacity: .85; }
 
@@ -149,6 +151,7 @@
     .chip-event   { background: var(--event-bg);   color: var(--event); }
     .chip-leader  { background: var(--leader-bg);  color: var(--leader); }
     .chip-venture { background: var(--venture-bg); color: var(--venture); }
+    .chip-groups  { background: var(--groups-bg);  color: var(--groups); }
     .more-link { font-size: 11px; color: var(--primary); font-weight: 600; cursor: pointer; }
 
     /* ── Mobile Week View ─────────────────────────────────────── */
@@ -173,6 +176,7 @@
     .week-chip-event   { background: var(--event-bg);   color: var(--event); }
     .week-chip-leader  { background: var(--leader-bg);  color: var(--leader); }
     .week-chip-venture { background: var(--venture-bg); color: var(--venture); }
+    .week-chip-groups  { background: var(--groups-bg);  color: var(--groups); }
 
     /* ── List View ────────────────────────────────────────────── */
     .list-view { padding: 0 24px 32px; display: none; flex-direction: column; gap: 16px; }
@@ -300,6 +304,7 @@
   <span class="pill pill-event"   data-type="Event"   onclick="toggleFilter(this)">Event</span>
   <span class="pill pill-leader"  data-type="Leader"  onclick="toggleFilter(this)">Leader</span>
   <span class="pill pill-venture" data-type="Venture" onclick="toggleFilter(this)">Venture</span>
+  <span class="pill pill-groups"  data-type="Groups"  onclick="toggleFilter(this)">Groups</span>
 </div>
 
 <!-- ══ Loading state ════════════════════════════════════════════ -->
@@ -404,14 +409,29 @@
 'use strict';
 
 // ── Config ────────────────────────────────────────────────────
+const DEFAULT_SHEET_ID = '1391dw_4VesxxvkkciU3-EWqIjzcmWx2tND2B1q_vSVQ';
 const STORAGE_KEY    = 'ya_calendar_sheet_id';
 const REFRESH_MS     = 5 * 60 * 1000; // auto-refresh every 5 min
-const VALID_TYPES    = new Set(['Service', 'Event', 'Leader', 'Venture']);
-const TYPE_META      = {
+const VALID_TYPES    = new Set(['Service', 'Event', 'Leader', 'Venture', 'Groups']);
+
+// Normalize common spelling variants from the sheet
+const TYPE_NORMALIZE = {
+  'service':  'Service',
+  'event':    'Event',
+  'leader':   'Leader',
+  'leaders':  'Leader',
+  'venture':  'Venture',
+  'ventures': 'Venture',
+  'groups':   'Groups',
+  'group':    'Groups',
+};
+
+const TYPE_META = {
   Service: { cls: 'service', label: 'Service', icon: '🤝' },
   Event:   { cls: 'event',   label: 'Event',   icon: '🎉' },
   Leader:  { cls: 'leader',  label: 'Leader',  icon: '⭐' },
   Venture: { cls: 'venture', label: 'Venture', icon: '🚀' },
+  Groups:  { cls: 'groups',  label: 'Groups',  icon: '👥' },
 };
 const MONTH_NAMES = ['January','February','March','April','May','June',
                      'July','August','September','October','November','December'];
@@ -423,7 +443,7 @@ let currentYear     = new Date().getFullYear();
 let currentMonth    = new Date().getMonth();
 let currentWeekStart = getMondayOf(new Date());
 let currentView     = 'cal';
-let activeFilters   = new Set(['Service','Event','Leader','Venture']);
+let activeFilters   = new Set(['Service','Event','Leader','Venture','Groups']);
 let refreshTimer    = null;
 
 // ── Google Sheets fetch ───────────────────────────────────────
@@ -456,8 +476,8 @@ function parseDate(val) {
 function parseGvizTable(table) {
   const headers = table.cols.map(c => (c.label || '').trim().toLowerCase());
   const idx = {
-    name:   headers.findIndex(h => h === 'name' || h === 'event name'),
-    type:   headers.findIndex(h => h === 'type'),
+    name:   headers.findIndex(h => ['name','event','event name','title'].includes(h)),
+    type:   headers.findIndex(h => h === 'type' || h === 'category'),
     date:   headers.findIndex(h => h === 'date'),
     detail: headers.findIndex(h => ['detail','details','description','notes'].includes(h)),
   };
@@ -466,9 +486,11 @@ function parseGvizTable(table) {
     .filter(row => row.c && row.c.some(c => c && c.v != null))
     .map(row => {
       const g = i => (i >= 0 && row.c[i]) ? (row.c[i].v ?? '') : '';
+      const rawType = String(g(idx.type)).trim();
+      const type    = TYPE_NORMALIZE[rawType.toLowerCase()] ?? rawType;
       return {
         name:   String(g(idx.name)).trim(),
-        type:   String(g(idx.type)).trim(),
+        type,
         date:   parseDate(g(idx.date)),
         detail: String(g(idx.detail)).trim(),
       };
@@ -823,7 +845,7 @@ function closeEventModal(e) {
 
 // ── Settings panel ────────────────────────────────────────────
 function openSettings() {
-  const saved = localStorage.getItem(STORAGE_KEY) || '';
+  const saved = localStorage.getItem(STORAGE_KEY) || DEFAULT_SHEET_ID;
   document.getElementById('sheetInput').value = saved;
   document.getElementById('settingsStatus').className = 'status-msg hidden';
   document.getElementById('settingsStatus').textContent = '';
@@ -879,14 +901,9 @@ async function connectSheet() {
 
 // ── Init ──────────────────────────────────────────────────────
 (function init() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    loadData(saved);
-  } else {
-    showState('error', 'No sheet connected',
-      'Connect a Google Sheet to display your events.<br><br><a onclick="openSettings()">Open Settings to get started →</a>');
-    setSyncState('error', 'Not connected');
-  }
+  // Use saved override from Settings, otherwise fall back to the default sheet
+  const saved = localStorage.getItem(STORAGE_KEY) || DEFAULT_SHEET_ID;
+  loadData(saved);
 
   window.addEventListener('resize', () => { if (EVENTS.length > 0) renderAll(); });
   document.addEventListener('keydown', e => {

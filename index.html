@@ -8,7 +8,7 @@
   <meta property="og:title"       content="YA Calendar" />
   <meta property="og:description" content="Young Adults community calendar." />
   <meta property="og:type"        content="website" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%230a0a0a'/%3E%3Ctext x='100' y='148' font-family='Georgia,serif' font-size='108' font-weight='bold' fill='%23f2ede4' text-anchor='middle' letter-spacing='-2'%3Eya%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" href="ya.svg" />
 
   <style>
     /* ── Reset & Tokens ───────────────────────────────────────── */
@@ -47,8 +47,9 @@
     .header-left { display: flex; align-items: center; gap: 12px; }
     .logo {
       width: 32px; height: 32px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
+      background: #0a0a0a; display: flex; align-items: center; justify-content: center; padding: 4px;
     }
-    .logo svg { width: 100%; height: 100%; display: block; }
+    .logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
     .app-title    { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
     .app-subtitle { font-size: 12px; color: var(--muted); }
     .header-right { display: flex; align-items: center; gap: 8px; }
@@ -234,7 +235,7 @@
 <!-- ══ Header ══════════════════════════════════════════════════ -->
 <header class="app-header">
   <div class="header-left">
-    <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#0a0a0a"/><text x="100" y="148" font-family="Georgia,'Times New Roman',serif" font-size="108" font-weight="bold" fill="#f2ede4" text-anchor="middle" letter-spacing="-2">ya</text></svg></div>
+    <div class="logo"><img src="ya.svg" alt="YA" /></div>
     <div>
       <div class="app-title">YA Calendar</div>
       <div class="app-subtitle">Synced from Google Sheets</div>

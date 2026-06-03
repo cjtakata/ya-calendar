@@ -279,6 +279,13 @@
     .sw-app-name { font-size: 12px; font-weight: 700; }
     .sw-app-desc { font-size: 10px; color: var(--muted); margin-top: 1px; }
     .sw-divider  { height: 1px; background: var(--border); margin: 12px 0; }
+    .sw-hub-link {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px; border-radius: 8px; background: var(--bg); width: 100%;
+      font-size: 12px; font-weight: 600; color: var(--muted); text-decoration: none;
+      border: 1.5px solid transparent; transition: all .15s;
+    }
+    .sw-hub-link:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-light); }
   </style>
 </head>
 <body>
@@ -312,7 +319,10 @@
             <div><div class="sw-app-name">Discord</div><div class="sw-app-desc">Community home</div></div>
           </a>
         </div>
+        <div class="sw-divider"></div>
+        <a class="sw-hub-link" href="https://ya-hub.vercel.app">⊞ &nbsp;YA Hub — all tools</a>
       </div>
+    </div>
     </div>
     <div>
       <div class="app-title">YA Calendar</div>
